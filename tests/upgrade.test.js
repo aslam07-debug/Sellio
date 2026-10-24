@@ -47,7 +47,7 @@ test('approved security pins and legacy JavaScript Tailwind integration are exac
   const read = file => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
   const pkg = JSON.parse(read('package.json'));
   assert.deepEqual(pkg.dependencies, {
-    '@supabase/supabase-js': '2.99.2', next: '16.4.0', react: '19.2.8', 'react-dom': '19.2.8',
+    '@supabase/supabase-js': '2.99.2', next: '16.4.3', react: '19.2.8', 'react-dom': '19.2.8',
     recharts: '2.15.4', xlsx: 'https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz'
   });
   assert.deepEqual(pkg.devDependencies, { '@tailwindcss/postcss': '4.3.3', postcss: '8.5.23', tailwindcss: '4.3.3' });

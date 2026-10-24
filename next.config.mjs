@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    agentUpgrade: 'security'
+  },
   // No image optimization is needed for this screen.
   images: { unoptimized: true }
 };
