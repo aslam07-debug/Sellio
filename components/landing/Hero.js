@@ -1,0 +1,6 @@
+import ActionLink from './ActionLink';
+import DashboardPreview from './DashboardPreview';
+
+export default function Hero() {
+  return <section className="mx-auto grid max-w-[1200px] gap-12 px-6 py-16 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:py-24"><div><p className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-primary-dark">Sellio / для продавцов Kaspi</p><h1 className="text-[32px] font-extrabold leading-tight tracking-tight sm:text-[44px] lg:text-[52px]">Ваши заказы Kaspi.<br /><span className="text-primary-dark">Ясная картина</span><br />каждого дня.</h1><p className="mt-6 max-w-lg text-base leading-7 text-muted">Соберите импортированные заказы, аналитику и ручной учёт остатков в одном кабинете. Меньше разрозненных таблиц — больше контекста для решений.</p><div className="mt-8 flex flex-wrap gap-3"><ActionLink href="/register">Начать со своего магазина</ActionLink><ActionLink href="#demo" secondary>Смотреть демо</ActionLink></div><p className="mt-4 text-xs leading-5 text-muted">Kaspi MVP · первый импорт за 14 дней · без автоматической оплаты</p></div><div className="min-w-0 lg:rotate-2"><DashboardPreview compact /><p className="mt-4 text-center text-xs leading-5 text-muted">Публичный пример интерфейса. Ваши данные появятся после подключения и импорта.</p></div></section>;
+}

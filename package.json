@@ -1,0 +1,36 @@
+{
+  "name": "sellio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": " next build --webpack",
+    "start": " next start",
+    "test": "node --test tests/*.test.js",
+    "smoke": "node tests/smoke.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.99.2",
+    "next": "16.4.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "recharts": "2.15.4",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "postcss": "8.5.23",
+    "tailwindcss": "4.3.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "8.5.23",
+      "recharts>react-is": "19.2.8"
+    }
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "packageManager": "pnpm@10.17.1"
+}

@@ -1,0 +1,49 @@
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import { useApp } from '@/components/shell/AppContext';
+import useResource from '@/components/shell/useResource';
+import useMutation from '@/components/shell/useMutation';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Input from '@/components/ui/Input';
+import Skeleton from '@/components/ui/Skeleton';
+import { orderDate } from '@/lib/reportView';
+
+const tabs = [['profile', 'Профиль'], ['marketplaces', 'Маркетплейсы'], ['notifications', 'Уведомления'], ['plan', 'Тариф'], ['team', 'Команда']];
+function ProfileForm({ session, profile, saved }) {
+  const [name, setName] = useState(profile.name), [notice, setNotice] = useState('');
+  const mutation = useMutation(session);
+  return <form className="max-w-xl space-y-5" onSubmit={e => { e.preventDefault(); mutation.run('/api/settings/profile', { name }, () => { setNotice('Имя сохранено в users.'); saved(); }, 'PATCH'); }}><Input id="profile-name" label="Имя" maxLength={100} value={name} onChange={e => setName(e.target.value)} required disabled={mutation.busy || !profile.profileExists} /><Input id="profile-email" label="Email аккаунта Supabase Auth" value={profile.email ?? ''} readOnly hint="Изменение email здесь недоступно." />{profile.nameSource !== 'users' && <p className="text-sm text-muted">Имя показано из метаданных Auth; сохранение доступно только в существующий профиль users.</p>}{!profile.profileExists && <p role="alert" className="text-sm text-warning">Профиль users отсутствует. Обратитесь к администратору для проверки существующего создания профиля. Тариф не назначен автоматически.</p>}{mutation.error && <p role="alert" className="text-sm text-danger">{mutation.error}</p>}{notice && <p role="status" className="text-sm text-success">{notice}</p>}<Button type="submit" loading={mutation.busy} disabled={!profile.profileExists || !name.trim()}>Сохранить имя</Button></form>;
+}
+function StoreCard({ store, session, refresh }) {
+  const [token, setToken] = useState(''), [reconnect, setReconnect] = useState(false), [disconnect, setDisconnect] = useState(false), [confirmed, setConfirmed] = useState(false), [check, setCheck] = useState(null);
+  const mutation = useMutation(session);
+  const changed = () => { setToken(''); setReconnect(false); setDisconnect(false); setConfirmed(false); setCheck(null); refresh(); };
+  return <Card className="p-5 sm:p-6"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-widest text-primary-dark">Kaspi</p><h3 className="mt-2 break-words text-xl font-bold">{store.name}</h3><p className="mt-2 text-sm text-muted">{check ? `Проверено: ${orderDate(Date.parse(check.checkedAt))} · Алматы` : store.hasToken ? 'Токен сохранён. Текущая действительность не проверена.' : 'Токен не сохранён'}</p></div><span className={`rounded-full px-3 py-1 text-xs font-bold ${check ? 'bg-success/10 text-success' : 'bg-panel text-muted'}`}>{check ? 'Проверка успешна' : store.hasToken ? 'Токен сохранён' : 'Отключён'}</span></div>
+    <p className="mt-3 text-xs leading-5 text-muted">Проверка выполняет только чтение заказов на сервере. Не подключает живой склад и не запускает расписание.</p>
+    <div className="mt-5 flex flex-wrap gap-2"><Button variant="ghost" loading={mutation.busy} disabled={!store.hasToken || reconnect || disconnect} onClick={() => { setCheck(null); mutation.run('/api/settings/stores', { storeId: store.id, action: 'check' }, setCheck); }}>Проверить</Button><Button variant="ghost" disabled={mutation.busy} onClick={() => { setReconnect(v => !v); setToken(''); setDisconnect(false); setCheck(null); mutation.clearError(); }}>Переподключить</Button><Button variant="ghost" disabled={mutation.busy || !store.hasToken} onClick={() => { setDisconnect(v => !v); setReconnect(false); setToken(''); setConfirmed(false); setCheck(null); mutation.clearError(); }}>Отключить</Button></div>
+    {reconnect && <form className="mt-5 space-y-4 border-t border-warm pt-5" onSubmit={e => { e.preventDefault(); mutation.run('/api/kaspi/verify', { storeId: store.id, name: store.name, token }, changed); }}><Input id={`token-${store.id}`} label="Новый API токен Kaspi" type="password" placeholder="••••••••" autoComplete="off" maxLength={4096} value={token} onChange={e => setToken(e.target.value)} disabled={mutation.busy} required hint="Только в памяти формы. Сохранённый токен никогда не возвращается в браузер." /><p className="text-xs text-warning">Переподключение отменит прежние курсоры импорта. Начните новый импорт через подключение Kaspi.</p><Button type="submit" loading={mutation.busy} disabled={!token}>Проверить и сохранить</Button></form>}
+    {disconnect && <div className="mt-5 space-y-4 rounded-lg border border-danger/30 bg-danger/5 p-4"><p className="text-sm leading-6">Удаляется только сохранённый токен. Магазин, заказы и остатки остаются; импорт станет недоступен до переподключения.</p><label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} disabled={mutation.busy} className="h-4 w-4 accent-primary" />Подтверждаю отключение Kaspi</label><Button variant="danger" loading={mutation.busy} disabled={!confirmed} onClick={() => mutation.run('/api/settings/stores', { storeId: store.id, action: 'disconnect', confirmed }, changed)}>Отключить, сохранив историю</Button></div>}
+    {mutation.error && <p role="alert" className="mt-4 text-sm text-danger">{mutation.error}</p>}
+  </Card>;
+}
+function SettingsPanel({ app }) {
+  const [tab, setTab] = useState('profile'), [revision, setRevision] = useState(0);
+  const { session, profile, profileState, refreshProfile, refresh } = app;
+  const stores = useResource('/api/settings/stores', session, '', revision + refresh, tab === 'marketplaces');
+  return <><header><p className="text-xs font-bold uppercase tracking-widest text-primary-dark">Рабочее пространство / Sellio</p><h1 className="mt-2 text-2xl font-extrabold sm:text-3xl">Настройки системы</h1><p className="mt-2 text-sm text-muted">Профиль аккаунта и безопасное управление подключением Kaspi.</p></header>
+    <div role="tablist" aria-label="Разделы настроек" className="flex overflow-x-auto border-b border-warm">{tabs.map(([id, label]) => <Button key={id} id={`tab-${id}`} role="tab" aria-controls="settings-panel" aria-selected={tab === id} variant="icon" onClick={() => setTab(id)} className={`shrink-0 rounded-none border-b-2 px-4 ${tab === id ? 'border-primary text-primary-dark' : 'border-transparent text-muted'}`}>{label}</Button>)}</div>
+    <section id="settings-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="space-y-5">
+      {tab === 'profile' && <Card className="p-5 sm:p-8"><h2 className="mb-6 text-lg font-bold">Данные профиля</h2>{profileState.loading ? <Skeleton className="h-48 w-full" /> : profileState.error ? <p role="alert" className="text-sm text-danger">{profileState.error}</p> : profile && <ProfileForm key={`${profile.id}:${profile.name}`} session={session} profile={profile} saved={refreshProfile} />}</Card>}
+      {tab === 'marketplaces' && <><div className="flex flex-wrap items-center justify-between gap-4"><div><h2 className="text-lg font-bold">Подключения маркетплейсов</h2><p className="mt-1 text-sm text-muted">Список только ваших магазинов Kaspi.</p></div><Link href="/onboarding" className="rounded-lg bg-primary px-4 py-3 text-sm font-bold text-paper hover:bg-primary-dark">Добавить магазин Kaspi</Link></div>{stores.loading && <Skeleton className="h-48 w-full" />}{stores.error && <p role="alert" className="text-sm text-danger">{stores.error}</p>}{stores.data?.data.map(store => <StoreCard key={`${store.id}:${revision}:${refresh}`} store={store} session={session} refresh={() => setRevision(v => v + 1)} />)}{stores.data?.data.length === 0 && <Card className="p-6 text-sm text-muted">Магазинов Kaspi пока нет. Добавьте свой магазин через подключение.</Card>}<Card className="p-6"><h3 className="font-bold">Другие маркетплейсы</h3><div className="mt-4 flex flex-wrap gap-3">{['Ozon', 'Wildberries', 'AliExpress / Forte'].map(label => <Button key={label} variant="ghost" disabled>{label} · после MVP</Button>)}</div></Card></>}
+      {tab === 'notifications' && <Card className="p-6"><h2 className="text-lg font-bold">Уведомления не настроены</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-muted">Telegram-бот, проверка каждые 30 минут и сохранение email-предпочтений не реализованы. Для них нужны отдельно согласованные инфраструктура и схема. Здесь нет неработающих переключателей.</p><Button variant="ghost" disabled className="mt-5">Подключение Telegram недоступно</Button></Card>}
+      {tab === 'plan' && <Card className="p-6"><h2 className="text-lg font-bold">Тариф аккаунта</h2><p className="mt-4 font-inter text-2xl font-bold">{profileState.loading ? 'Загружаем…' : profile?.plan ?? 'Не указан'}</p>{profileState.error && <p role="alert" className="mt-3 text-sm text-danger">{profileState.error}</p>}<p className="mt-3 text-sm leading-6 text-muted">Значение из users.plan. Это не подтверждение оплаты или активных привилегий. Покупка и изменение тарифа пока недоступны.</p><Button variant="ghost" disabled className="mt-5">Изменение тарифа недоступно</Button></Card>}
+      {tab === 'team' && <Card className="p-6"><h2 className="text-lg font-bold">Команда — будущий этап</h2><p className="mt-3 text-sm leading-6 text-muted">В существующей схеме нет модели участников и приглашений. Доступ сейчас ограничен вашим аккаунтом; приглашения не отправляются.</p><Button variant="ghost" disabled className="mt-5">Приглашения недоступны</Button></Card>}
+    </section>
+  </>;
+}
+export default function Settings() {
+  const app = useApp();
+  return <SettingsPanel key={`${app.session.user.id}:${app.session.access_token}:${app.storeId}`} app={app} />;
+}

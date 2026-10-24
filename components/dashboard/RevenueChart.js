@@ -1,0 +1,7 @@
+'use client';
+import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import Card from '@/components/ui/Card';
+import ChartTooltip from './ChartTooltip';
+export default function RevenueChart({ data = [] }) {
+  return <Card className="min-w-0 p-5"><h2 className="font-bold">Завершённые заказы: сумма и количество</h2><p className="mt-1 text-xs text-muted">Сумма KZT слева; все заказы справа. Пропуски суммы не заменяются нулём.</p><div className="mt-5 h-72 w-full min-w-0">{data.length ? <ResponsiveContainer width="100%" height="100%"><ComposedChart data={data}><CartesianGrid stroke="var(--chart-border)" vertical={false} /><XAxis dataKey="day" tickFormatter={v => v.slice(5)} stroke="var(--chart-muted)" tick={{ fontSize: 10 }} /><YAxis yAxisId="money" width={56} stroke="var(--chart-muted)" tickFormatter={v => `${v / 1000}k ₸`} tick={{ fontSize: 10 }} /><YAxis yAxisId="orders" orientation="right" width={28} allowDecimals={false} stroke="var(--chart-muted)" tick={{ fontSize: 10 }} /><Tooltip content={<ChartTooltip />} /><Bar dataKey="orders" name="Все заказы" yAxisId="orders" fill="var(--chart-soft)" radius={[3, 3, 0, 0]} /><Line dataKey="amount" name="Сумма завершённых" yAxisId="money" stroke="var(--chart-primary)" strokeWidth={2} dot={false} connectNulls={false} /></ComposedChart></ResponsiveContainer> : <p className="pt-16 text-center text-sm text-muted">Нет данных за выбранный период</p>}</div></Card>;
+}

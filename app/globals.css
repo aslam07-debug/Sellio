@@ -1,0 +1,44 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  :root {
+    --chart-primary: theme('colors.primary.DEFAULT');
+    --chart-soft: theme('colors.primary.light');
+    --chart-muted: theme('colors.muted');
+    --chart-border: theme('colors.warm');
+    --chart-success: theme('colors.success');
+    --chart-danger: theme('colors.danger');
+    --chart-warning: theme('colors.warning');
+  }
+  body {
+    @apply bg-surface font-jakarta text-dark antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-4 outline-primary-dark;
+  }
+
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Tailwind 3 spaced the first field after the visually hidden legend. */
+  fieldset:has(> legend.sr-only) {
+    padding-block-start: calc(var(--spacing) * 4);
+  }
+
+  ::selection {
+    @apply bg-primary-light text-dark;
+  }
+
+  meter::-webkit-meter-bar {
+    @apply rounded-full border-0 bg-panel;
+  }
+  meter::-webkit-meter-optimum-value {
+    @apply rounded-full bg-primary-dark;
+  }
+  meter::-moz-meter-bar {
+    @apply rounded-full bg-primary-dark;
+  }
+}
